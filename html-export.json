@@ -20,11 +20,13 @@
     "learning-algorithms": "slides/L05_learning_in_games.pdf",
     "bandit": "slides/L06_bandit.pdf",
     "efg-modeling": "slides/L07_efgs.pdf",
-    "efg-learning": "slides/L08_efgs_learning.pdf"
+    "efg-learning": "slides/L08_efgs_learning.pdf",
+    "deep-rl-1": "slides/L09_deep_rl.pdf"
   },
   "interactive_slides": {
     "learning-foundations": "slides/L04_learning_in_games.html",
-    "learning-algorithms": "slides/L05_learning_in_games.html"
+    "learning-algorithms": "slides/L05_learning_in_games.html",
+    "deep-rl-1": "slides/L09_deep_rl.html"
   },
   "notes": [
     {

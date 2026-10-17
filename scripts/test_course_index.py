@@ -283,6 +283,14 @@ class CourseIndexTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Unsupported course prose element'):
             rich_html({'func': 'equation', 'body': {'func': 'text', 'text': 'x'}})
 
+    def test_deep_rl_links_the_interactive_html_deck(self):
+        page = render_index(self.config, self.modules)
+        row = re.search(r'<tr class="schedule-row" id="lecture-deep-rl-1">.*?</tr>', page, re.S).group()
+        self.assertIn('href="slides/L09_deep_rl.html?overview=1"', row)
+        self.assertIn('>Slides</a>', row)
+        self.assertNotIn('.pptx', row)
+        self.assertNotIn('Not yet posted', row)
+
 
 if __name__ == '__main__':
     unittest.main()
