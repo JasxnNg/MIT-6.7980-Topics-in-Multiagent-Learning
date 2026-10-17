@@ -150,7 +150,7 @@ class LinkTests(unittest.TestCase):
                                          '--online', *extra_args])
                 self.assertEqual(status, expected)
                 if expected == 0:
-                    self.assertIn('Non-blocking DOI warning:', errors.getvalue())
+                    self.assertIn('Non-blocking link warning:', errors.getvalue())
                     self.assertIn('0 external URLs responded successfully', output.getvalue())
         self.lecture(BASE + 'missing.html')
         with patch.object(links, 'probe_url') as probe, \
@@ -158,6 +158,26 @@ class LinkTests(unittest.TestCase):
             self.assertEqual(links.main([str(self.folder), '--config', str(config_path),
                                          '--online', '--doi-warnings']), 1)
         probe.assert_not_called()
+
+    def test_approved_publisher_403s_do_not_block_deployment(self):
+        urls = ('https://mitpress.mit.edu/9780262039246/reinforcement-learning/',
+                'https://www.science.org/doi/10.1126/science.add4679')
+        self.write('index.html', ''.join(f'<a href="{url}">Reference</a>' for url in urls))
+        config_path = self.folder / 'config.json'
+        config_path.write_text(json.dumps(self.config))
+        for failure, expected in (('unverified: HTTP 403', 0), ('broken: HTTP 404', 1)):
+            output, errors = io.StringIO(), io.StringIO()
+            with self.subTest(failure=failure), \
+                    patch.object(links, 'probe_url', return_value=failure) as probe, \
+                    redirect_stdout(output), redirect_stderr(errors):
+                status = links.main([str(self.folder), '--config', str(config_path), '--online'])
+            self.assertEqual(status, expected)
+            self.assertEqual(probe.call_count, 2)
+            for url in urls:
+                self.assertIn(url, errors.getvalue())
+            if expected == 0:
+                self.assertEqual(errors.getvalue().count('Non-blocking link warning:'), 2)
+                self.assertIn('0 external URLs responded successfully', output.getvalue())
 
 
 class Response(io.BytesIO):
@@ -214,6 +234,22 @@ class OnlineTests(unittest.TestCase):
             self.assertEqual(len(result.warnings), 2)
             self.assertEqual(len(result.issues), 3)
             self.assertTrue(all(failure in item for item in result.warnings + result.issues))
+
+    def test_publisher_exception_is_limited_to_exact_urls_and_http_403(self):
+        approved = {'https://mitpress.mit.edu/9780262039246/reinforcement-learning/',
+                    'https://www.science.org/doi/10.1126/science.add4679'}
+        other = {'https://mitpress.mit.edu/another-book/',
+                 'https://www.science.org/doi/10.1126/science.another',
+                 'https://www.science.org/doi/10.1126/science.add4679?different=1'}
+        urls = {url: {'slides/L09_deep_rl.html'} for url in approved | other}
+        for failure in ('unverified: HTTP 403', 'broken: HTTP 404',
+                        'broken: HTTP 410', 'unverified: timed out'):
+            with self.subTest(failure=failure), patch.object(links, 'probe_url', return_value=failure) as probe:
+                result = links.check_external(urls)
+            self.assertEqual(probe.call_count, len(urls))
+            expected_warnings = 2 if failure == 'unverified: HTTP 403' else 0
+            self.assertEqual(len(result.warnings), expected_warnings)
+            self.assertEqual(len(result.issues), len(urls) - expected_warnings)
 
 
 if __name__ == '__main__':

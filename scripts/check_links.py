@@ -16,6 +16,14 @@ from urllib.parse import unquote, urljoin, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 
+# Instructor-approved exceptions for publisher URLs that reject automated checks.
+# Match the exact URL and HTTP status; other failures must still block deployment.
+HTTP_403_WARNINGS = frozenset({
+    'https://mitpress.mit.edu/9780262039246/reinforcement-learning/',
+    'https://www.science.org/doi/10.1126/science.add4679',
+})
+
+
 def css_links(text):
     text = re.sub(r'/\*.*?\*/', '', text, flags=re.S)
     links = [m[2] for m in re.finditer(r'url\(\s*([\'"]?)(.*?)\1\s*\)', text, re.S)]
@@ -229,7 +237,8 @@ def check_external(links, *, timeout=10, doi_warnings=False):
         for url, result in zip(urls, pool.map(lambda value: probe_url(value, timeout), urls)):
             if result:
                 destination = audit.issues
-                if doi_warnings and urlsplit(url).hostname in ('doi.org', 'dx.doi.org'):
+                if ((doi_warnings and urlsplit(url).hostname in ('doi.org', 'dx.doi.org'))
+                        or (url in HTTP_403_WARNINGS and result == 'unverified: HTTP 403')):
                     destination = audit.warnings
                 destination.append(f'{", ".join(sorted(links[url]))}: {result}: {url}')
     return audit
@@ -281,14 +290,14 @@ def main(argv=None):
         print(f'Checking {len(audit.external)} distinct external URLs…', flush=True)
         external = check_external(audit.external, doi_warnings=args.doi_warnings)
         for warning in external.warnings:
-            print(f'Non-blocking DOI warning: {warning}', file=sys.stderr)
+            print(f'Non-blocking link warning: {warning}', file=sys.stderr)
         if external.issues:
             print('\n'.join(external.issues), file=sys.stderr)
             print('External verification failed; links listed as errors block deployment.', file=sys.stderr)
             return 1
         if external.warnings:
             print(f'{len(audit.external) - len(external.warnings)} external URLs responded successfully; '
-                  f'{len(external.warnings)} non-blocking DOI warning(s).')
+                  f'{len(external.warnings)} non-blocking warning(s).')
         else:
             print(f'All {len(audit.external)} external URLs responded successfully.')
     else:
