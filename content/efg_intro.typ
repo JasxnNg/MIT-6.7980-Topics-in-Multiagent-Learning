@@ -202,7 +202,7 @@ A different conceptualization of a strategy for a player is as a choice of (inde
 ] <def:realization-equivalence>
 
 #theorem[Kuhn's theorem #citep(<Kuhn53:Extensive>)][
-  In a perfect-recall extensive-form game, every mixed strategy of a player is realization-equivalent to a behavioral strategy, and vice versa.
+  In a perfect-recall extensive-form game, every normal-form strategy of a player is realization-equivalent to a behavioral strategy, and vice versa.
 ]
 
 Perfect recall matters because a behavioral strategy randomizes locally at each decision point. Remembering the information and actions that led to the current decision allows this local randomization to reproduce the outcome probabilities of a mixed strategy chosen at the start of the game.
