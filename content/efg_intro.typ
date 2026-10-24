@@ -205,8 +205,6 @@ A different conceptualization of a strategy for a player is as a choice of (inde
   In a perfect-recall extensive-form game, every normal-form strategy of a player is realization-equivalent to a behavioral strategy, and vice versa.
 ]
 
-Perfect recall matters because a behavioral strategy randomizes locally at each decision point. Remembering the information and actions that led to the current decision allows this local randomization to reproduce the outcome probabilities of a mixed strategy chosen at the start of the game.
-
 == Sequence form <sec-sequence-form>
 
 The _sequence-form representation_ #citep(<Romanovskii62:Reduction>, <Koller96:Efficient>, <Stengel96:Efficient>) soundly resolves the issue of non-convexity. Like behavioral strategies, in the sequence-form representation a strategy is a vector $vx in bb(R)_(>= 0)^Sigma$ whose entries are indexed by $Sigma$. However, the generic entry $x_(j a)$ contains the _product_ of the probabilities of all actions at all decision nodes on the path from the root of the process to action $a$ at decision node $j$. In order to be a valid sequence-form strategy, the entries in $vx$ must therefore satisfy the following probability-flow-conservation constraints:
